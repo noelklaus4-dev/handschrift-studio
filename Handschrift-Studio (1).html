@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Handschrift-Studio</title>
+<style>
+:root{--bg:#f6f5f1;--fg:#1c1c1a;--mut:#6b6b66;--card:#fff;--line:#dcdcd4;--ac:#2347b5;--acf:#fff;--ok:#2e7d4f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#161615;--fg:#eeeeea;--mut:#9a9a94;--card:#222220;--line:#3a3a36;--ac:#8aa4ff;--acf:#111;--ok:#5fc48a}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#161615;--fg:#eeeeea;--mut:#9a9a94;--card:#222220;--line:#3a3a36;--ac:#8aa4ff;--acf:#111;--ok:#5fc48a}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;max-width:760px;margin:0 auto;padding:14px}
+h1{font-size:1.3rem;margin:4px 0 2px}p.s{color:var(--mut);margin:0 0 12px;font-size:.9rem}
+.tabs{display:flex;gap:6px;margin:10px 0}.tabs button{flex:1}
+button,select{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
+button.p,.tabs button.on{background:var(--ac);color:var(--acf);border-color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#cv{width:100%;max-width:340px;aspect-ratio:1;touch-action:none;border:1px solid var(--line);border-radius:10px;display:block;margin:8px auto;background:#fff}
+#big{font-size:2rem;font-weight:700}
+#grid{display:flex;flex-wrap:wrap;gap:4px}#grid button{padding:4px 0;width:34px;font-size:.95rem}
+#grid button.d{border-color:var(--ok);color:var(--ok)}#grid button.c{background:var(--ac);color:var(--acf)}
+textarea{width:100%;min-height:150px;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
+label{display:flex;flex-direction:column;font-size:.8rem;color:var(--mut);flex:1;min-width:120px}
+input[type=range]{width:100%}
+.pg{background:#fff;border:1px solid var(--line);border-radius:6px;margin:10px 0;box-shadow:0 1px 6px #0002}.pg svg{display:block;width:100%;height:auto}
+#toast{color:var(--ok);min-height:1.3em;font-size:.9rem}.hide{display:none}#v0.on,#v1.on,#v2.on{background:var(--ac);color:var(--acf);border-color:var(--ac)}#grid button.f{background:var(--ok);color:var(--acf);border-color:var(--ok)}
+</style></head><body>
+<h1>Handschrift-Studio</h1>
+<p class="s">Schreibe deine Schrift einmal, danach wird jeder Text in deiner Handschrift gesetzt.</p>
+<div class="tabs"><button id="t1">1 · Meine Handschrift</button><button id="t2">2 · Text &amp; Export</button></div>
+
+<section id="s1">
+ <div class="card">
+  <div class="row" style="justify-content:space-between"><span>Schreibe: <span id="big"></span></span><span id="cnt" style="color:var(--mut)"></span></div>
+  <div class="row" style="margin-top:8px"><select id="sty"><option value="print">Druckschrift</option><option value="cursive">Schreibschrift</option></select><span style="color:var(--mut)">Variante</span><button id="v0">1</button><button id="v1">2</button><button id="v2">3</button></div><canvas id="cv"></canvas>
+  <p class="s" style="text-align:center;margin:0 0 8px">Blaue Linie = Grundlinie, graue = Höhe der Kleinbuchstaben</p>
+  <div class="row">
+   <button id="clr">Löschen</button><button id="und">Strich zurück</button><button id="prv">‹</button><button id="skp">›› Zeichen</button><button id="nxt" class="p" style="flex:1">Speichern &amp; weiter ›</button>
+  </div>
+ </div>
+ <div class="card"><div id="grid"></div>
+  <p class="s" style="margin:8px 0 0">Grün = mindestens eine Variante, kräftig grün = alle drei. Pro Zeichen kannst du bis zu 3 Varianten schreiben, beim Einfügen wird zufällig eine gewählt. Druck- und Schreibschrift werden getrennt gespeichert. Mit „Schrift sichern“ lädst du alles als Datei herunter, mit „Schrift laden“ stellst du sie später wieder her.</p>
+  <div class="row" style="margin-top:8px"><button id="mj">Zu den Mathe-Zeichen</button><button id="bk">Schrift sichern (.json)</button><button id="ld">Schrift laden</button><button id="ldt">Aus Text laden</button><input id="ldf" type="file" accept=".json" class="hide"></div>
+ </div>
+</section>
+
+<section id="s2" class="hide">
+ <div class="card">
+  <div id="warn" class="s hide" style="color:#b3402a">Für diese Schriftart ist noch nichts gespeichert – schreibe zuerst Zeichen in Schritt 1 oder lade eine gesicherte Schrift.</div>
+  <textarea id="txt" placeholder="Text hier einfügen …">Hallo! Das ist ein Test meiner Handschrift. Äpfel, Öl und Übung machen den Meister.</textarea>
+  <div class="row" style="margin-top:8px"><button id="up">Datei laden (.txt, .docx, .pdf)</button><input id="upf" type="file" accept=".txt,.md,.docx,.pdf,.pages" class="hide"></div>
+  <p class="s" style="margin:6px 0 0">Pages-Dateien kann ich nicht lesen: in Pages „Ablage → Exportieren → Word/PDF“ wählen oder den Text kopieren.</p>
+ </div>
+ <div class="card">
+  <div class="row">
+   <label>Schriftgröße<input id="xh" type="range" min="2" max="4.5" step=".1" value="2.8"></label>
+   <label>Zeilenabstand<input id="lh" type="range" min="5" max="12" step=".5" value="8"></label>
+   <label>Strichdicke<input id="pw" type="range" min=".2" max=".9" step=".05" value=".35"></label>
+   <label>Unregelmäßigkeit<input id="rnd" type="range" min="0" max="100" step="5" value="50"></label>
+  </div>
+  <div class="row" style="margin-top:8px">
+   <select id="sty2"><option value="print">Druckschrift</option><option value="cursive">Schreibschrift</option></select><select id="col"><option value="#1c2f8f">Blauer Kuli</option><option value="#111111">Schwarz</option><option value="#555555">Bleistift</option></select>
+   <select id="pp"><option value="none">Blanko</option><option value="ruled">Liniert</option><option value="grid">Kariert 5 mm (Mathe)</option></select>
+   <button id="dice">Neu würfeln</button><button id="bk2">Schrift sichern</button><button id="ld2">Schrift laden</button>
+  </div>
+ </div>
+ <div class="row"><button id="pdfb" class="p">PDF speichern / an Samsung Notes senden</button></div>
+ <p class="s" style="margin:8px 0 0">Samsung Notes: Speichere das PDF, öffne dann Samsung Notes, tippe auf „+“ bzw. „Hinzufügen“ und wähle „PDF“ (oder öffne die Datei in „Eigene Dateien“ und teile sie mit Samsung Notes). Die Seiten lassen sich dort beschriften. Samsung Notes übernimmt PDF und PNG als Seite bzw. Bild, nicht als einzelne Striche, die der Radierer löschen kann. Bilder lassen sich dort aber markieren und löschen.</p><div id="toast"></div>
+ <div id="pages"></div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+const CH="abcdefghijklmnopqrstuvwxyzäöüßABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ0123456789.,!?:;-()\"'/+=×÷<>[]{}%^_²³√π±≤≥≠≈∞°·*\\|~&@#$€αβγδθλμσφωΔΣΩ";
+const $=s=>document.querySelector(s);
+function mig(o){if(o.v===2)return{v:2,print:o.print||{},cursive:o.cursive||{}};const p={};Object.keys(o).forEach(c=>{if(Array.isArray(o[c]))p[c]=[o[c]]});return{v:2,print:p,cursive:{}}}
+let G={v:2,print:{},cursive:{}},ST='print';
+try{const o=JSON.parse(localStorage.getItem('hw1')||'null');if(o)G=mig(o)}catch(e){}
+const hasAny=()=>Object.keys(G.print).length+Object.keys(G.cursive).length>0;
+const persist=()=>{try{localStorage.setItem('hw1',JSON.stringify(G))}catch(e){}};
+const toast=t=>{$('#toast').textContent=t;setTimeout(()=>{if($('#toast').textContent===t)$('#toast').textContent=''},4000)};
+
+/* ---------- Tabs ---------- */
+function tab(n){$('#s1').classList.toggle('hide',n!=1);$('#s2').classList.toggle('hide',n!=2);$('#t1').classList.toggle('on',n==1);$('#t2').classList.toggle('on',n==2);if(n==2)render()}
+$('#t1').onclick=()=>tab(1);$('#t2').onclick=()=>tab(2);
+
+/* ---------- Glyphen zeichnen ---------- */
+const cv=$('#cv'),cx=cv.getContext('2d'),S=320;
+const d=window.devicePixelRatio||1;cv.width=S*d;cv.height=S*d;cx.setTransform(d,0,0,d,0,0);
+let cur=[],strokes=[],idx=0,drawing=false;
+function redraw(){
+ cx.fillStyle='#fff';cx.fillRect(0,0,S,S);cx.lineWidth=1;
+ [[70,'#ecd5d5'],[130,'#cfd9e6'],[200,'#6f93c4'],[260,'#ecd5d5']].forEach(([y,c])=>{cx.strokeStyle=c;cx.beginPath();cx.moveTo(0,y);cx.lineTo(S,y);cx.stroke()});
+ cx.strokeStyle='#111';cx.lineWidth=3;cx.lineCap=cx.lineJoin='round';
+ [...strokes,...(cur.length?[cur]:[])].forEach(s=>{cx.beginPath();s.forEach((p,i)=>i?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]));if(s.length==1)cx.lineTo(s[0][0]+.1,s[0][1]);cx.stroke()});
+}
+const pt=e=>{const r=cv.getBoundingClientRect();return[Math.round((e.clientX-r.left)*S/r.width*10)/10,Math.round((e.clientY-r.top)*S/r.height*10)/10]};
+cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);drawing=true;cur=[pt(e)];redraw();e.preventDefault()};
+cv.onpointermove=e=>{if(!drawing)return;const p=pt(e),l=cur[cur.length-1];if(Math.hypot(p[0]-l[0],p[1]-l[1])>1.5){cur.push(p);redraw()}};
+cv.onpointerup=cv.onpointercancel=()=>{if(!drawing)return;drawing=false;strokes.push(cur);cur=[];redraw()};
+let vr=0;const vs=c=>G[ST][c]||[];
+function grid(){const g=$('#grid');g.innerHTML='';[...CH].forEach((c,i)=>{const n=vs(c).filter(v=>v&&v.length).length,b=document.createElement('button');b.textContent=c;b.className=(n?'d ':'')+(n>=3?'f ':'')+(i==idx?'c':'');b.onclick=()=>{commit();load(i)};g.appendChild(b)});$('#cnt').textContent=Object.keys(G[ST]).length+' / '+CH.length;[0,1,2].forEach(j=>$('#v'+j).classList.toggle('on',j==vr))}
+function load(i,v){idx=(i+CH.length)%CH.length;vr=v||0;strokes=(vs(CH[idx])[vr]||[]).map(s=>s.slice());cur=[];$('#big').textContent=CH[idx];redraw();grid()}
+function commit(){const c=CH[idx],a=(G[ST][c]||[]).slice();while(a.length<3)a.push(null);a[vr]=strokes.length?strokes:null;if(a.some(v=>v))G[ST][c]=a;else delete G[ST][c];persist()}
+$('#clr').onclick=()=>{strokes=[];redraw()};
+$('#und').onclick=()=>{strokes.pop();redraw()};
+$('#nxt').onclick=()=>{commit();if(vr<2)load(idx,vr+1);else load(idx+1,0)};
+$('#skp').onclick=()=>{commit();load(idx+1,0)};
+$('#sty').onchange=()=>{commit();ST=$('#sty').value;load(idx,0)};
+[0,1,2].forEach(j=>$('#v'+j).onclick=()=>{commit();load(idx,j)});
+$('#prv').onclick=()=>{commit();if(vr>0)load(idx,vr-1);else load(idx-1,2)};
+$('#mj').onclick=()=>{commit();load(CH.indexOf('+'))};
+
+/* ---------- Sichern / Laden ---------- */
+function box(mode,data,name){
+ const o=$('#bxo'),t=$('#bxa');o.style.display='flex';t.value=data||'';
+ $('#bxt').textContent=mode=='save'?'Schrift sichern':'Schrift aus Text laden';
+ $('#bxh').textContent=mode=='save'?'Tippe auf „Alles kopieren“ und füge den Text in eine Notiz ein (z. B. Samsung Notes). Oder auf „Teilen“, um ihn als Datei zu speichern.':'Füge hier den gesicherten Text ein und tippe auf „Laden“.';
+ $('#bxc').style.display=$('#bxs').style.display=mode=='save'?'':'none';$('#bxl').style.display=mode=='save'?'none':'';
+ $('#bxc').onclick=async()=>{t.focus();t.select();try{await navigator.clipboard.writeText(t.value);toast('Kopiert')}catch(e){document.execCommand('copy');toast('Kopiert')}};
+ $('#bxs').onclick=async()=>{try{const f=new File([t.value],name||'meine-handschrift.json',{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f]});else await navigator.share({text:t.value})}catch(e){toast('Teilen nicht möglich – bitte kopieren')}};
+ $('#bxl').onclick=()=>{try{const x=JSON.parse(t.value);if(typeof x==='object'&&x){G=mig(x);persist();load(idx,vr);render();o.style.display='none';toast('Schrift geladen')}}catch(e){toast('Text nicht lesbar')}};
+ $('#bxx').onclick=()=>{o.style.display='none'};
+}
+async function dl(name,data){
+ let dd=null;
+ try{dd=window.claude&&await claude.use('downloads')}catch(e){dd=null}
+ if(dd){
+  try{await dd.save({filename:name,data});toast('Gespeichert: '+name);return}catch(e){if(e.code==='declined')return}
+ }
+ if(typeof data!=='string'){try{const f=new File([data],name,{type:/\.pdf$/.test(name)?'application/pdf':'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}}
+ try{
+  const u=URL.createObjectURL(new Blob([data],{type:/\.pdf$/.test(name)?'application/pdf':/\.png$/.test(name)?'image/png':'application/json'})),a=document.createElement('a');
+  a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),2000);
+ }catch(e){}
+ if(typeof data==='string')box('save',data,name);else toast('Download konnte nicht bestätigt werden. Wenn nichts in „Downloads“ liegt, tippe erneut und erlaube das Speichern.');
+}
+$('#bk').onclick=()=>{commit();dl('meine-handschrift.json',JSON.stringify(G))};
+$('#ld').onclick=()=>$('#ldf').click();
+$('#ldt').onclick=()=>box('load','');
+$('#ldf').onchange=async e=>{try{const o=JSON.parse(await e.target.files[0].text());if(typeof o==='object'){G=mig(o);persist();load(idx,vr);render();toast('Schrift geladen')}}catch(x){toast('Datei nicht lesbar')}e.target.value=''};
+
+/* ---------- Datei-Import ---------- */
+$('#up').onclick=()=>$('#upf').click();
+$('#upf').onchange=async e=>{
+ const f=e.target.files[0];e.target.value='';if(!f)return;const n=f.name.toLowerCase();let t='';
+ try{
+  if(n.endsWith('.docx')){t=(await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()})).value}
+  else if(n.endsWith('.pdf')){
+   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+   const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+   for(let i=1;i<=pdf.numPages;i++){const c=await (await pdf.getPage(i)).getTextContent();t+=c.items.map(x=>x.str+(x.hasEOL?'\n':' ')).join('')+'\n'}
+  }else if(n.endsWith('.pages')){toast('Pages-Dateien werden nicht unterstützt – bitte als Word/PDF exportieren.');return}
+  else t=await f.text();
+  $('#txt').value=t.replace(/[ \t]+\n/g,'\n').trim();render();
+ }catch(x){toast('Datei konnte nicht gelesen werden.')}
+};
+
+/* ---------- Layout ---------- */
+let seed=7,pages=[],O={};
+const rng=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const norm=s=>s.replace(/[„“”«»]/g,'"').replace(/[‘’‚]/g,"'").replace(/[–—−]/g,'-').replace(/…/g,'...').replace(/\t/g,' ').replace(/\r/g,'');
+function pickGlyph(S,c,R,last){const ok=k=>S[k]&&S[k].some(v=>v&&v.length);let g=ok(c)?c:null;if(!g){const o=c===c.toLowerCase()?c.toUpperCase():c.toLowerCase();if(o.length==1&&ok(o))g=o}if(!g)return null;const vv=S[g].filter(v=>v&&v.length);let i=Math.floor(R()*vv.length);if(vv.length>1&&last[g]===i)i=(i+1+Math.floor(R()*(vv.length-1)))%vv.length;last[g]=i;const s=vv[i];let a=1e9,b=-1e9;s.forEach(q=>q.forEach(p=>{a=Math.min(a,p[0]);b=Math.max(b,p[0])}));return{s,a,b}}
+
+function opts(){const pp=$('#pp').value,l=+$('#lh').value;return{xh:+$('#xh').value,lh:pp==='grid'?Math.max(5,Math.floor(l/5)*5):l,pw:+$('#pw').value,rnd:+$('#rnd').value/100,col:$('#col').value,pp,m:20}}
+function build(){
+ const o=O=opts(),R=rng(seed),k=o.xh/70,mL=o.m,mT=o.m,maxX=210-o.m,maxY=297-o.m;
+ const out=[[]];let x=mL,y=mT+o.lh,tilt=0;
+ const SS=G[$('#sty2').value],last={};const adv=p=>p?(p.b-p.a)*k+o.xh*.2:o.xh;
+ const nl=()=>{x=mL;y+=o.lh;tilt=(R()-.5)*.01*o.rnd};
+ norm($('#txt').value).split('\n').forEach(par=>{
+  par.split(/ +/).filter(Boolean).forEach(w=>{
+   const gl=[...w].map(c=>pickGlyph(SS,c,R,last)),ww=gl.reduce((s,p)=>s+adv(p),0);
+   if(x>mL&&x+ww>maxX)nl();
+   if(y>maxY){out.push([]);y=mT+o.lh}
+   gl.forEach(p=>{
+    if(p){const{a,b}=p,sc=k*(1+(R()-.5)*.12*o.rnd),rot=(R()-.5)*.08*o.rnd,dy=(R()-.5)*.5*o.rnd;
+     const bx=x+(b-a)*k/2,by=y+(x-mL)*tilt+dy,cs=Math.cos(rot),sn=Math.sin(rot),mid=(a+b)/2;
+     p.s.forEach(s=>out[out.length-1].push(s.map(p=>{const u=(p[0]-mid)*sc,v=(p[1]-200)*sc;return[Math.round((bx+u*cs-v*sn)*100)/100,Math.round((by+u*sn+v*cs)*100)/100]})));
+    }
+    x+=adv(p);
+   });
+   x+=o.xh;
+  });
+  nl();
+ });
+ return out;
+}
+const gridEnd=o=>o.m+Math.floor((297-2*o.m)/5)*5;
+const rules=o=>{const r=[];if(o.pp==='none')return r;const st=o.pp==='grid'?5:o.lh;for(let y=o.m+(o.pp==='grid'?0:o.lh);y<=297-o.m;y+=st)r.push(y);return r};
+const vrules=o=>{const r=[];if(o.pp==='grid')for(let x=o.m;x<=210-o.m;x+=5)r.push(x);return r};
+function svg(P,bare){
+ let h='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 297">'+(bare?'':'<rect width="210" height="297" fill="#fff"/>');
+ if(!bare){const ge=gridEnd(O);rules(O).forEach(y=>h+=`<line x1="${O.m}" x2="${210-O.m}" y1="${y}" y2="${y}" stroke="#b9c8e4" stroke-width=".12"/>`);vrules(O).forEach(x=>h+=`<line x1="${x}" x2="${x}" y1="${O.m}" y2="${ge}" stroke="#b9c8e4" stroke-width=".12"/>`)}
+ let dd='';P.forEach(s=>{dd+='M'+s[0][0]+' '+s[0][1];if(s.length==1)dd+='l.01 0';else s.slice(1).forEach(p=>dd+='L'+p[0]+' '+p[1])});
+ return h+`<path d="${dd}" fill="none" stroke="${O.col}" stroke-width="${O.pw}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function render(){
+ const sn=Object.keys(G[$('#sty2').value]).length;
+ $('#warn').classList.toggle('hide',sn>0);
+ pages=sn?build():[];
+ $('#pages').innerHTML=pages.map((P,i)=>`<div class="pg">${svg(P)}</div><div class="row"><button data-png="${i}">PNG (transparent), Seite ${i+1}</button></div>`).join('');
+}
+let tm;['#txt','#xh','#lh','#pw','#rnd','#col','#pp','#sty2'].forEach(s=>$(s).addEventListener('input',()=>{clearTimeout(tm);tm=setTimeout(render,250)}));
+$('#dice').onclick=()=>{seed=Math.floor(Math.random()*1e6);render()};
+$('#pages').onclick=e=>{const i=e.target.dataset&&e.target.dataset.png;if(i==null)return;const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=1654;c.height=2339;c.getContext('2d').drawImage(im,0,0,1654,2339);c.toBlob(b=>b?dl('handschrift-seite-'+(+i+1)+'.png',b):toast('PNG fehlgeschlagen'),'image/png')};im.onerror=()=>toast('PNG fehlgeschlagen');im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg(pages[i],true).replace('<svg ','<svg width="1654" height="2339" '))};
+
+/* ---------- PDF ---------- */
+$('#pdfb').onclick=async()=>{
+ if(!pages.length){toast('Erst Handschrift anlegen und Text einfügen.');return}
+ if(!window.jspdf){toast('PDF-Bibliothek konnte nicht geladen werden.');return}
+ const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'}),hx=O.col.slice(1).match(/../g).map(v=>parseInt(v,16));
+ pages.forEach((P,i)=>{
+  if(i)doc.addPage();
+  doc.setDrawColor(185,200,228);doc.setLineWidth(.12);rules(O).forEach(y=>doc.line(O.m,y,210-O.m,y));vrules(O).forEach(x=>doc.line(x,O.m,x,gridEnd(O)));
+  doc.setDrawColor(hx[0],hx[1],hx[2]);doc.setLineWidth(O.pw);doc.setLineCap('round');doc.setLineJoin('round');
+  P.forEach(s=>{const rel=[];for(let j=1;j<s.length;j++)rel.push([s[j][0]-s[j-1][0],s[j][1]-s[j-1][1]]);if(!rel.length)rel.push([.01,0]);doc.lines(rel,s[0][0],s[0][1],[1,1],'S',false)});
+ });
+ dl('handschrift.pdf',doc.output('arraybuffer'));
+};
+
+$('#bk2').onclick=()=>$('#bk').click();$('#ld2').onclick=()=>$('#ldf').click();
+if(!Object.keys(G.print).length&&Object.keys(G.cursive).length)$('#sty2').value='cursive';
+load(0);tab(hasAny()?2:1);
+</script>
+<div id="bxo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:16px">
+ <div style="background:#fff;color:#111;border-radius:12px;padding:14px;max-width:560px;width:100%;box-sizing:border-box;font:15px system-ui,sans-serif">
+  <div id="bxt" style="font-weight:600;margin-bottom:6px"></div>
+  <div id="bxh" style="font-size:13px;margin-bottom:8px"></div>
+  <textarea id="bxa" style="width:100%;height:160px;box-sizing:border-box;font:12px monospace"></textarea>
+  <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+   <button id="bxc">Alles kopieren</button><button id="bxs">Teilen / als Datei</button><button id="bxl">Laden</button><button id="bxx">Schließen</button>
+  </div>
+ </div>
+</div>
+</body></html>
